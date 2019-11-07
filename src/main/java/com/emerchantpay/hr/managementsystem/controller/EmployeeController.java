@@ -10,7 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
-@RestController("employees")
+@RestController
+@RequestMapping("v1/employees")
 public class EmployeeController {
 
     private final EmployeeService employeeService;
@@ -53,8 +54,16 @@ public class EmployeeController {
     }
 
     @GetMapping
-    public ResponseEntity<Collection<Employee>> listEmployees() {
-        Collection<Employee> employees = employeeService.listEmployees();
+    public ResponseEntity<Collection<Employee>> listEmployees(
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size) {
+        if (sortBy == null && page == null && size == null) {
+            Collection<Employee> employees = employeeService.listEmployees();
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(employees);
+        }
+        Collection<Employee> employees = employeeService.listEmployees(sortBy, page, size);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(employees);
     }
