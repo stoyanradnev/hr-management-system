@@ -1,0 +1,32 @@
+version: '3'
+services:
+  db:
+    container_name: database
+    image: postgres:latest
+    volumes:
+      - database:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=test
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    networks:
+      - my_network
+  web:
+    build:
+      context: ./
+      args:
+        JAR_FILE: target/hr.managementsystem-0.0.1-SNAPSHOT.jar
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - my_network
+volumes:
+  database: {}
+networks:
+  my_network:
+    driver: bridge
