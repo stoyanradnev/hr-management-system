@@ -1,8 +1,10 @@
 package com.emerchantpay.hr.managementsystem.controller;
 
+import com.emerchantpay.hr.managementsystem.domain.BulkDeleteEmployeesIds;
 import com.emerchantpay.hr.managementsystem.domain.Employee;
 import com.emerchantpay.hr.managementsystem.service.EmployeeService;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,13 +30,13 @@ public class EmployeeController {
     public ResponseEntity<Employee> updateEmployee(@PathVariable("id") String employeeId,
             @RequestBody Employee employee) {
 
-        Employee createdOrUpdatedEmployee = employeeService.updateEmployee(employee, employeeId);
+        Employee createdOrUpdatedEmployee = employeeService.updateOrCreateEmployee(employee, employeeId);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(createdOrUpdatedEmployee);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Employee> deleteEmployee(@PathVariable("id") String employeeId) {
+    public ResponseEntity<?> deleteEmployee(@PathVariable("id") String employeeId) {
 
         Optional<Employee> employee = employeeService.deleteEmployee(employeeId);
         if (employee.isPresent()) {
@@ -56,15 +58,26 @@ public class EmployeeController {
     @GetMapping
     public ResponseEntity<Collection<Employee>> listEmployees(
             @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "asc", required = false) Boolean ascending,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
-        if (sortBy == null && page == null && size == null) {
+        if (sortBy == null && page == null && size == null && ascending == null) {
             Collection<Employee> employees = employeeService.listEmployees();
             return ResponseEntity.status(HttpStatus.OK)
                     .body(employees);
         }
-        Collection<Employee> employees = employeeService.listEmployees(sortBy, page, size);
+        Collection<Employee> employees = employeeService.listEmployees(sortBy, page, size, ascending);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(employees);
+    }
+
+    @PostMapping("/bulk-delete")
+    public ResponseEntity<BulkDeleteEmployeesIds> deleteMultipleEmployees(
+            @RequestBody BulkDeleteEmployeesIds bulkDeleteEmployeesIds) {
+        List<Long> deletedEmployeesIds = employeeService
+                .deleteMultipleEmployees(bulkDeleteEmployeesIds.getEmployeesIds());
+        BulkDeleteEmployeesIds deletedIds = new BulkDeleteEmployeesIds(deletedEmployeesIds);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(deletedIds);
     }
 }
